@@ -1,6 +1,9 @@
 package resourcesynccontroller
 
 import (
+	"encoding/json"
+	"net/http"
+
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	"github.com/openshift/library-go/pkg/operator/events"
@@ -50,4 +53,28 @@ func NewResourceSyncController(
 	}
 
 	return resourceSyncController, nil
+}
+
+func NewDebugHandler(controller *resourcesynccontroller.ResourceSyncController) http.Handler {
+	return &debugHTTPHandler{controller: controller}
+}
+
+type debugHTTPHandler struct {
+	controller *resourcesynccontroller.ResourceSyncController
+}
+
+func (h *debugHTTPHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	if req.URL.Path != "/syncRules" {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	data, err := json.Marshal(h.controller.SecretSyncRules())
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Write(data)
+	w.WriteHeader(http.StatusOK)
 }

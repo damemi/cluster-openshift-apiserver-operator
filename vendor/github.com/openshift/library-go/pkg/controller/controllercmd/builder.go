@@ -44,6 +44,9 @@ type ControllerContext struct {
 	// EventRecorder is used to record events in controllers.
 	EventRecorder events.Recorder
 
+	// Server is the GenericAPIServer serving healthz checks
+	Server *genericapiserver.GenericAPIServer
+
 	stopChan <-chan struct{}
 }
 
@@ -182,6 +185,7 @@ func (b *ControllerBuilder) Run(config *unstructured.Unstructured, ctx context.C
 		}
 	}
 
+	var server *genericapiserver.GenericAPIServer
 	switch {
 	case b.servingInfo == nil && len(b.healthChecks) > 0:
 		return fmt.Errorf("healthchecks without server config won't work")
@@ -197,7 +201,7 @@ func (b *ControllerBuilder) Run(config *unstructured.Unstructured, ctx context.C
 		}
 		serverConfig.HealthzChecks = append(serverConfig.HealthzChecks, b.healthChecks...)
 
-		server, err := serverConfig.Complete(nil).New(b.componentName, genericapiserver.NewEmptyDelegate())
+		server, err = serverConfig.Complete(nil).New(b.componentName, genericapiserver.NewEmptyDelegate())
 		if err != nil {
 			return err
 		}
@@ -220,6 +224,7 @@ func (b *ControllerBuilder) Run(config *unstructured.Unstructured, ctx context.C
 		ProtoKubeConfig: protoConfig,
 		EventRecorder:   eventRecorder,
 		stopChan:        ctx.Done(),
+		Server:          server,
 	}
 
 	if b.leaderElection == nil {

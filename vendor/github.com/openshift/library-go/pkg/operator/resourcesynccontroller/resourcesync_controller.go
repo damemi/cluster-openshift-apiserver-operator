@@ -234,6 +234,10 @@ func (c *ResourceSyncController) processNextWorkItem() bool {
 	return true
 }
 
+func (c *ResourceSyncController) SecretSyncRules() map[ResourceLocation]ResourceLocation {
+	return c.secretSyncRules
+}
+
 // eventHandler queues the operator to check spec and status
 func (c *ResourceSyncController) eventHandler() cache.ResourceEventHandler {
 	return cache.ResourceEventHandlerFuncs{

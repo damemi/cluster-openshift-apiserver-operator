@@ -148,6 +148,8 @@ func RunOperator(ctx *controllercmd.ControllerContext) error {
 
 	configUpgradeableController := unsupportedconfigoverridescontroller.NewUnsupportedConfigOverridesController(operatorClient, ctx.EventRecorder)
 
+	ctx.Server.Handler.NonGoRestfulMux.HandleFunc("/syncRules", resourcesynccontroller.NewDebugHandler(resourceSyncController).ServeHTTP)
+
 	operatorConfigInformers.Start(ctx.Done())
 	kubeInformersForNamespaces.Start(ctx.Done())
 	apiregistrationInformers.Start(ctx.Done())
